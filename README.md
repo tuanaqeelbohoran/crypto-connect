@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/banner.png" alt="Secure Connect: remote desktop for Windows and Linux" width="100%"></p>
+
 # Secure Connect
 
 Secure Connect lets you see and control another computer's screen over the

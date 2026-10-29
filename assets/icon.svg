@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Secure Connect</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b2fd6"/>
+      <stop offset="1" stop-color="#12b5d6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <rect x="214" y="272" width="596" height="372" rx="40" fill="#fff" fill-opacity="0.16" stroke="#fff" stroke-width="44"/>
+  <rect x="468" y="660" width="88" height="82" fill="#fff"/>
+  <rect x="340" y="742" width="344" height="48" rx="24" fill="#fff"/>
+  <circle cx="512" cy="438" r="62" fill="#fff"/>
+  <polygon points="478,470 546,470 568,578 456,578" fill="#fff"/>
+  <polygon points="640,560 640,810 706,748 752,862 806,838 760,728 848,722" fill="#fff" stroke="#181664" stroke-width="34" stroke-linejoin="round" paint-order="stroke"/>
+</svg>
