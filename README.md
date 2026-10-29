@@ -7,10 +7,12 @@ internet, or let someone see and control yours, with the connection
 encrypted from one computer to the other. It runs on Linux and Windows, has
 no installer, and needs no router configuration.
 
-> **Status: version 0.2.2, not yet tested on Windows hardware.**
-> The Windows program has been built but never run on a real Windows PC, and
-> the new clipboard, file transfer and saved-computer features have only been
-> tested with automated tests. Both computers must run the same version (the
+> **Status: version 0.2.2, early release.**
+> Tested on real computers so far: a Windows PC connecting to and controlling
+> a Linux (Ubuntu, GNOME on Wayland) PC. Not yet tested on real computers: a
+> Windows PC as the computer being controlled, and the clipboard, file
+> transfer, keyboard layout conversion and saved-computer features (they have
+> only been tested with automated tests). Both computers must run the same version (the
 > connection protocol changed; older versions are refused with a clear message).
 > Please try it on computers that do not matter before relying on it. See
 > [What has been tested](#what-has-been-tested).
@@ -52,8 +54,12 @@ Then [verify your download](#verify-your-download) (recommended).
 4. **To finish:** close the remote window, or press **End** / **End all** on
    the host.
 
-On Linux with GNOME on Wayland (the Ubuntu default), the first connection
-asks someone at the host to approve screen sharing once.
+On Linux with GNOME on Wayland (the Ubuntu default), the system itself asks
+for approval of screen sharing and remote control **once**, in its own dialog
+on the host computer. Secure Connect cannot skip or answer that dialog, not
+even for a correct password: it is the operating system's protection. Do it
+once while you are at that computer; it is remembered, and after that anyone
+with the password connects with nobody having to approve anything.
 
 Full instructions: [USER-GUIDE.md](USER-GUIDE.md).
 
@@ -106,7 +112,7 @@ Limits:
 
 | | Linux (X11) | Linux (GNOME on Wayland) | Windows 10 / 11 |
 | --- | --- | --- | --- |
-| Use as viewer | Yes | Yes | Yes (untested) |
+| Use as viewer | Yes | Yes | Yes (tested) |
 | Share the screen (host) | Whole screen | Yes, after a one-time approval | Main monitor only (untested) |
 | Remote mouse and keyboard | Yes (tested only with simulated input) | Yes, through the desktop's remote-control portal (approval asked once; not yet verified on every setup) | Yes, except lock screen, UAC prompts and admin programs (untested) |
 
@@ -190,10 +196,13 @@ Details: [SECURITY.md](SECURITY.md).
 
 ## Known limitations
 
-- **Windows: never run on real hardware yet.** It cannot see or control the
-  lock screen, UAC prompts or programs running as administrator, and only
-  shows the main monitor.
-- **Linux Wayland:** the first connection needs someone at the host to approve screen sharing and remote control.
+- **Windows:** viewing and controlling a Linux PC from Windows has been
+  tested. A Windows PC as the computer being controlled has not. As a
+  host it cannot see or control the lock screen, UAC prompts or programs
+  running as administrator, and only shows the main monitor.
+- **Linux Wayland:** the system's screen-sharing and remote-control dialog
+  must be approved once at the host computer (a password cannot replace it);
+  after that it is remembered.
 - Only the first viewer can control; extra viewers' input is silently
   ignored.
 - Keyboard layout conversion has only been tested with simulated keyboards,
@@ -209,8 +218,8 @@ Details: [SECURITY.md](SECURITY.md).
   second, approval remembered).
 - **Not yet checked:** two computers over the real internet; the
   post-quantum key exchange through the public relays; real mouse and
-  keyboard control; the remote picture at full size in the app; anything on
-  Windows; HiDPI and multi-monitor setups.
+  keyboard control on every setup; a Windows PC as the computer being
+  controlled; HiDPI and multi-monitor setups.
 
 Bug reports are welcome. Never include passwords or the files in the
 Secure Connect settings folder in a report.
