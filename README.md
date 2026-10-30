@@ -7,12 +7,13 @@ internet, or let someone see and control yours, with the connection
 encrypted from one computer to the other. It runs on Linux and Windows, has
 no installer, and needs no router configuration.
 
-> **Status: version 0.2.2, early release.**
+> **Status: version 0.3.1, early release.**
 > Tested on real computers so far: a Windows PC connecting to and controlling
 > a Linux (Ubuntu, GNOME on Wayland) PC. Not yet tested on real computers: a
 > Windows PC as the computer being controlled, and the clipboard, file
-> transfer, keyboard layout conversion and saved-computer features (they have
-> only been tested with automated tests). Both computers must run the same version (the
+> transfer, file names in other languages, keyboard layout conversion,
+> automatic quality and saved-computer features (they have only been tested
+> with automated tests). Both computers must run the same version (the
 > connection protocol changed; older versions are refused with a clear message).
 > Please try it on computers that do not matter before relying on it. See
 > [What has been tested](#what-has-been-tested).
@@ -139,8 +140,21 @@ supported; there is no macOS, ARM or mobile version.
 - Up to 5 viewers at once; the first one controls, the others watch.
 - Shows who is connected, with End and End all buttons; security settings are
   locked while anyone is connected.
-- Video at up to 30 frames per second (H.264, about 3 Mbit/s).
+- Video at up to 30 frames per second (H.264). The quality adapts by itself
+  to the speed of the connection (lower bit rate, frame rate and size on a
+  slow link, back up when it improves); simulated tests only so far.
+- A viewer that cannot control (another viewer is in control) is told so in
+  its window.
 
+- **File manager:** names in Japanese, Chinese, Korean and other scripts are
+  shown with fonts already installed on the computer (on Linux you may need
+  a package such as `fonts-noto-cjk`; Windows has them). Arabic letters are
+  not joined and Indian-language scripts are not shaped (a limit of the
+  window toolkit). Check boxes, Ctrl+A, Shift and Ctrl click select several
+  items at once.
+- **Linux Wayland approval button:** a button in the host panel runs the
+  system's one-time screen-sharing approval on purpose, while you are at the
+  computer.
 - **Keyboard layouts:** each side keeps its own layout. What you type is sent
   as the character, and the other computer types it on its own layout
   (German to US and so on). A setting switches to matching physical key
@@ -162,14 +176,12 @@ supported; there is no macOS, ARM or mobile version.
 - Sound; image and file clipboard.
 - Separate desktops for several users on one Linux computer.
 - Choosing your own relay server in the app.
-- Hardware video encoding; automatic quality adjustment for slow
-  connections.
+- Hardware video encoding.
 - A log of who connected and when.
-- A message telling extra viewers that they can only watch.
 - Forwarding of the Windows key, Alt+Tab, Ctrl+Alt+Del and held-down key
   repeat; dead keys and input-method editors.
-- On a slow connection the picture can run behind (a known limit; keystrokes
-  themselves are not delayed).
+- After a sudden big drop in connection speed the picture can lag for a few
+  seconds once. Real slow links have not been tested yet.
 
 ## Security summary
 

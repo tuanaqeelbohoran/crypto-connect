@@ -5,9 +5,10 @@ internet, or let someone else see and control yours. The connection is
 encrypted from one computer to the other.
 
 > **Early release.** Secure Connect is new and has had limited real-world
-> testing. In particular, the Windows version has **never been run on a real
-> Windows PC** yet, and a full test between two computers over the internet
-> has not been done. Please try it on computers that do not matter before you
+> testing. In particular, only one Windows-to-Linux setup has been tried on
+> real hardware (a Windows PC controlling an Ubuntu GNOME Wayland PC: picture,
+> mouse and keyboard worked); a Windows PC as the **controlled** computer has
+> not been tried. Please try it on computers that do not matter before you
 > rely on it. The section [What has been tested](#what-has-been-tested) lists
 > exactly what is known to work.
 
@@ -62,10 +63,11 @@ host, and you can use it to connect to other computers at the same time.
 - An internet connection. You do **not** need to change any settings on your
   router (no "port forwarding").
 - **The same generation of Secure Connect on both computers.** This version
-  (with clipboard sync, the file manager and keyboard layouts) speaks
-  connection protocol version 3. Copies built before it, including the
-  published v0.1.0 downloads and earlier test builds (protocol 2), cannot
-  connect to it and it cannot connect to them: the attempt fails with
+  (with clipboard sync, the file manager, keyboard layouts and automatic
+  picture quality) speaks connection protocol version 4. Copies built
+  before it, including the published v0.1.0 downloads and earlier test
+  builds (protocols 2 and 3), cannot connect to it and it cannot connect to
+  them: the attempt fails with
   "Connection failed: unsupported protocol version …". Update **both**
   computers.
 
@@ -302,13 +304,25 @@ What works and what doesn't:
     **inside** the other computer. Copied **text** also travels between the
     two computers automatically; see [Clipboard sync](#clipboard-sync).
 - **Only the first person connected can control.** If more people connect at
-  the same time, they can watch but their mouse and keyboard do nothing.
-  They are **not** told this on their side; on the host the list shows them
-  as "(view only)".
+  the same time, they can watch but their mouse and keyboard are not sent.
+  Their remote window says so in an orange line at the top: **"View only:
+  another viewer is in control (reconnect when it leaves)"**. On the host
+  the list shows them as "(view only)". Control is decided when a viewer
+  connects: after the controlling viewer has left, close the window and
+  connect again.
 
-The picture is sent at up to 30 frames per second. On a slow connection it
-may look blurry or skip; Secure Connect drops old frames rather than falling
-behind.
+**Picture quality adjusts itself.** The picture is sent at up to 30 frames
+per second and about 3 Mbit/s to start with. The viewer confirms every
+picture it has shown, so the other computer knows how much is still on the
+way. On a slow connection it sends fewer and smaller pictures instead of
+letting them pile up: first a lower bitrate (the picture gets blurrier),
+then fewer frames per second (down to 5), and on a very slow connection a
+picture at half the size. When the connection gets faster again, quality
+comes back step by step over several seconds. The top bar of the remote
+window shows what is used right now, for example **"Quality: auto (15 fps,
+1.2 Mbit/s)"**. The goal is that what you see is never more than a fraction
+of a second old, so what you type shows up promptly even on a slow
+connection.
 
 ## Keyboard layouts
 
@@ -475,8 +489,7 @@ right.
   Enter), **Up**, **Home** and **Roots** (`/`, or the drive letters on
   Windows), and **Refresh**. Click the column titles to sort by name, size
   or modified time (shown in UTC); folders always come first. Double-click a
-  folder to open it. Click selects one item, Ctrl+click adds or removes
-  one, Shift+click selects a range, **Select all** selects everything.
+  folder to open it. See [Selecting several items](#selecting-several-items).
 - **Copying:** select files or folders and press **Copy >>** (this computer
   to the remote one) or **<< Copy** (the other way). They go into the folder
   shown on the other side. At most 4 copies run at once; the rest wait in
@@ -496,8 +509,10 @@ right.
   [Copying in more detail](#copying-in-more-detail)).
 - **New folder, Rename:** names follow the same rules on both sides (no
   `/ \ < > : " | ? *`, no control characters, no reserved Windows names
-  such as `CON`, no dot or space at the end, at most 255 bytes); the dialog
-  says what is wrong with a name.
+  such as `CON`, no dot or space at the end, at most 255 bytes, which is
+  about 85 Japanese, Chinese or Korean letters); the dialog says what is
+  wrong with a name. Names in other languages are fine; see
+  [Names in other languages](#names-in-other-languages).
 - **Delete** asks first; deleting a folder, or more than 10 items, needs
   you to type `DELETE`. Protected folders (roots, home, the folders
   containing it, system folders) are refused. See
@@ -511,6 +526,95 @@ right.
   transfers** with a **Stop** button each (it stops only that copy; the
   viewer stays connected), and the **Activity** list shows what was copied,
   made, renamed or deleted (kept in memory only).
+
+#### Selecting several items
+
+Each pane has a check box on every row and one in the header. These work
+the same way on both sides:
+
+| Do | Result |
+| --- | --- |
+| Click the check box of a row | Adds or removes that row (Shift+click it to select a range) |
+| Click the header check box | Selects everything usable in the folder; click again to clear. It shows a dash when only some rows are selected |
+| Click a name | Selects only that item |
+| Ctrl+click a name | Adds or removes that item |
+| Shift+click a name | Selects the range from the last item you clicked; Ctrl+Shift+click adds the range to what is selected |
+| Ctrl+A | Selects everything in the pane you last clicked in (the heading says "keys work here") |
+| Esc | Clears the selection |
+| Up / Down, Page Up / Page Down, Home / End | Moves the selection; with Shift it extends it |
+
+The line under each list says how many items are selected and how big
+the selected files are, for example "3 selected, 12.4 MB" (folders are
+not counted in the size). **Copy** and **Delete** act on everything
+selected; **Rename** needs exactly one item. The selection is kept when
+the folder refreshes (by name) and cleared when you open another folder.
+The keys do nothing while a dialog or a text box (the path bar, the name
+box) has the keyboard. **The delete box lists how many items and the first
+five full paths; what it deletes is what it showed when it opened**, even
+if the folder changes behind it. All of this is covered by automated tests
+only; it has not been tried on a screen.
+
+#### Names in other languages
+
+File names are Unicode text and travel unchanged between the computers
+(Japanese, Chinese, Korean, Arabic, Hebrew, emoji; the composed and
+decomposed forms of an accented letter are kept as two different names, as
+the file system keeps them).
+
+- **Fonts.** Secure Connect never ships a font. When it starts it looks
+  for fonts your computer already has and adds them behind its built-in
+  one, so Latin text looks as before and other scripts are drawn with the
+  system font. On **Windows** these are built in (Yu Gothic, Meiryo,
+  Microsoft YaHei, Microsoft JhengHei, Malgun Gothic, Segoe UI, Tahoma, ...).
+  On **Linux** install a CJK font if file names show as small boxes:
+  Debian and Ubuntu `sudo apt install fonts-noto-cjk` (also
+  `fonts-noto-core` for Arabic, Hebrew, Thai, Devanagari), Fedora
+  `sudo dnf install google-noto-sans-cjk-fonts`, Arch
+  `sudo pacman -S noto-fonts-cjk`. Then restart Secure Connect. Fonts in
+  `/usr/share/fonts`, `/usr/local/share/fonts`, `~/.local/share/fonts` and
+  `~/.fonts` are found (and the one `fc-match` names, if fontconfig is
+  installed). At most 10 font files and 60 MB are used; damaged fonts are
+  skipped.
+- **A font is only needed on the computer you sit at**, because that is
+  the one that draws the names. A remote Linux computer without CJK fonts
+  still shows Japanese names correctly on your screen if your computer has
+  the font.
+- **When no font has a character**, it shows as a box, as before, and the
+  line under the list says "This computer has no font for some characters
+  in these names". It only looks at the rows on screen.
+- **Chinese, Japanese and Korean share Han characters**, and one font draws
+  them. The order is Japanese, Simplified Chinese, Korean, Traditional
+  Chinese, unless your language setting (`LANG`) says Chinese or Korean,
+  which goes first. A Chinese name can therefore show with Japanese-style
+  letter shapes on a Japanese computer. It is readable, not wrong.
+- **Not supported: correct typesetting of complex scripts.** The window
+  draws one letter after another, left to right. Arabic and Hebrew letters
+  appear but Arabic letters are **not joined** and right-to-left text is
+  **not reordered** (a name may look reversed or in separate letters);
+  Devanagari and Thai show their letters without shaping (marks may sit in
+  the wrong place). The names still copy, rename and delete correctly; only
+  how they look is limited. Typing such text in the name box has the same
+  limit, and input methods (IME) for Japanese, Chinese and Korean are not
+  supported in text boxes (paste the name instead). Colour emoji are drawn
+  as simple black-and-white emoji.
+- **Length.** A name can be 255 **bytes**. Japanese, Chinese and Korean
+  letters take 3 bytes, so about 85 of them; most emoji take 4. Copying also
+  needs room for the `.part` suffix, so a name of 251 to 255 bytes cannot
+  be copied (the message says so).
+- **Names that are refused when you create or receive them:** control
+  characters, invisible direction marks (such as the right-to-left override
+  that makes `report-gpj.exe` look like `report-exe.jpg`), zero-width
+  characters (which also means the joiner some Persian and emoji-sequence
+  names use), `/ \ < > : " | ? *`, and names that are not valid text. Such
+  names found in a listing are shown with `\u{...}` in place of the hidden
+  characters.
+- **Names that are not valid text** can exist on Linux (old files made with a
+  Shift-JIS or EUC-JP name, or any bytes) and on Windows (unpaired
+  surrogates). They are listed greyed out; hold the mouse over one: "rename
+  it on that computer". They cannot be selected, opened, copied, renamed or
+  deleted from Secure Connect, so nothing is ever done to a different file
+  by mistake. A folder copy leaves them out and says how many it left out.
+  Rename them where they are (or convert them, for example with `convmv`).
 
 #### Copying in more detail
 
@@ -611,8 +715,10 @@ and a new list is started.
 - **Very large folders:** a folder with more than **20,000 entries** is
   only partly listed (the status line says so); the rest cannot be reached
   in the file manager, and such a folder cannot be copied as a whole.
-- **Names that are not valid UTF-8** (possible on Linux) are shown with a
-  replacement character and cannot be opened, copied, renamed or deleted.
+- **Names that are not valid text** (possible on Linux and, rarely, on
+  Windows) are shown greyed with a hint and cannot be selected, opened,
+  copied, renamed or deleted (see
+  [Names in other languages](#names-in-other-languages)).
 - **Times** in the Modified column are shown in **UTC**, not your local
   time.
 - **Leftover partial files.** A stopped copy leaves `name.part`; if that
@@ -623,8 +729,8 @@ and a new list is started.
   yourself.
 - **Windows:** everything Windows-specific (drive letters, `C:\` paths,
   junctions, short names, the protection of Windows folders, the
-  never-overwrite rename) is built and unit-tested but has **never been run
-  on a real Windows PC**.
+  never-overwrite rename) is built and unit-tested but the file manager has
+  **not been tried with a real Windows computer** yet.
 
 ### Require post-quantum encryption
 
@@ -645,12 +751,33 @@ explain this.
 ## Linux with Wayland: approving screen sharing
 
 On Ubuntu's default desktop (GNOME on Wayland), programs are not allowed to
-see the screen or move the mouse without your permission. The first time
-someone connects to your computer and takes control, a **system "Remote
+see the screen or move the mouse without your permission. A **system "Remote
 Desktop" dialog** asks you to approve screen sharing **and remote
-interaction** (keyboard and mouse). Choose the screen, leave "Allow remote
-interaction" switched on, and confirm. Secure Connect remembers the approval,
-so later connections do not ask again.
+interaction** (keyboard and mouse). **The system dialog must be approved once
+at the host computer; a password cannot replace it. After that it is
+remembered and password connections need nobody.**
+
+Do it on purpose, before anyone connects: in the main window (Wayland only),
+the line **Remote control approval: not given yet / given** shows the state.
+While you are at this computer, press **Allow screen sharing and remote
+control now**, choose the screen, leave "Allow remote interaction" switched
+on and confirm. Secure Connect saves the approval and closes that session at
+once (no picture is kept). The button waits up to two minutes for your
+answer and is greyed out while someone is connected or while it runs. If you
+cancel or deny, or the desktop has no Remote Desktop portal, the line under
+the button says so. Without this step the dialog appears at the first
+connection that takes control instead.
+
+Where the approval is kept: the file `remotedesktop.token` (see
+[Where Secure Connect keeps its files](#where-secure-connect-keeps-its-files)),
+in `~/.config/secure-connect/`. To forget the approval, close Secure Connect
+and delete that file; the next approval asks again.
+
+With a saved approval a connection with the right password shows no dialog.
+This is checked by reading the code (the saved approval is sent to the
+portal at every start) but **not yet on real hardware**: what GNOME does
+after a reboot, an update or an expired approval is unverified here, and it
+may ask again. If it does, press the button again while at the computer.
 
 What your answer means:
 
@@ -671,9 +798,8 @@ them the plain screen-sharing dialog is used (and remembered separately), and
 no keyboard or mouse access is ever requested for them.
 
 Important for unattended use: **someone must be at the computer the first
-time** to approve this dialog. If nobody approves it, the connection ends.
-Do this once before you leave the computer alone, for example by connecting
-to it yourself from another computer.
+time** to approve this dialog (use the button above). If nobody approves it,
+the connection ends.
 
 If the approval was cancelled or failed, the main window shows a red warning
 such as "Screen capture failed last time: …".
@@ -840,8 +966,17 @@ there. Only use this override while watching the host screen, and remove it
 if the pointer does not end up exactly where the viewer points.
 
 **My mouse and keyboard do nothing, and I am the second viewer**
-Only the first connected person can control. Ask them to disconnect, then
-reconnect.
+The window says "View only: another viewer is in control (reconnect when it
+leaves)". Only the first connected person can control. Ask them to
+disconnect, then close your window and connect again. (The same line also
+appears in the rare case that the host cannot use its mouse and keyboard at
+all; its main window then has an "Input:" line explaining why.)
+
+**The picture is blurry, jerky or small on a slow connection**
+That is the automatic quality at work (see the "Quality: auto" text in the
+top bar): on a slow connection Secure Connect sends fewer, lower-quality
+pictures so they stay current. It recovers by itself when the connection
+gets faster.
 
 **Windows: I see a black or frozen picture at the lock screen or a security prompt**
 Secure Connect cannot see or control the Windows lock screen, the
@@ -858,8 +993,9 @@ Install the missing library: on Ubuntu 24.04,
 `sudo apt install libpipewire-0.3-0t64 libxkbcommon0`.
 
 **Windows: the program window does not appear / SmartScreen blocks it**
-See [Starting Secure Connect](#windows). The Windows version is untested,
-so problems are possible; please report them.
+See [Starting Secure Connect](#windows). Only the Windows PC as the
+controlling side has been tried on real hardware, so other problems are
+possible; please report them.
 
 ## What Secure Connect does not do (yet)
 
@@ -868,14 +1004,13 @@ so problems are possible; please report them.
 - No separate desktops for several users on one Linux computer; viewers see
   the session that is on the screen.
 - No way in the app to choose your own relay server.
-- No hardware video encoding and no automatic quality adjustment for slow
-  connections (it always aims for about 3 Mbit/s).
+- No hardware video encoding. Automatic quality only lowers the bitrate,
+  frame rate and size; there is no manual quality setting.
 - No log of who connected when. The host's **Activity** list shows the
   recent sessions and file operations (the last 200 entries) but is kept in
   memory only and is gone when Secure Connect closes; apart from that there
   is only the failed-attempt counter.
 - No copy and paste of files through the clipboard: use the file manager.
-- Extra viewers are not told that they can only watch.
 - Only the main monitor is shown on Windows; multi-monitor and very
   high-resolution (HiDPI) screens have not been tested.
 
@@ -889,20 +1024,23 @@ Being honest about where things stand:
   Accept prompts and video, with simulated screens and input.
 - Wayland screen sharing on a real GNOME desktop on Linux: worked at 30
   frames per second, and the approval was remembered.
+- **A Windows PC connecting to and controlling a Linux PC** (Ubuntu, GNOME on
+  Wayland) on real hardware: the picture, the mouse and the keyboard work.
 
 **Not yet checked**
 
 - Two computers connected over the real internet.
 - The post-quantum key exchange through the public relay servers.
-- Real mouse and keyboard control of a computer (only simulated so far).
-  This includes control through the Wayland Remote Desktop portal, which has
-  been built and tested only against a simulated portal.
+- Real mouse and keyboard control in other setups than the one listed above
+  (for example Linux to Linux, or anything controlling a Windows PC).
 - Keyboard layouts: "Match typed characters" and "Match key positions" were
   tested only with simulated key events (German, French and US layouts,
   AltGr, shortcuts), never with real keyboards and real computers.
 - The remote picture shown at full size in the app window.
-- Anything at all on Windows (it has been built, but never run on a real
-  Windows PC).
+- A Windows PC as the **controlled** computer (the host), Windows clipboard
+  sync, the Windows file manager and Windows keyboard layouts. The Windows
+  limits stay: no lock screen, no UAC prompts, no programs run as
+  administrator, main monitor only.
 - High-resolution (HiDPI) screens and computers with several monitors.
 - Saved-computer cards in the real window, and remembering passwords in a
   real system password store (GNOME Keyring, KWallet, Windows Credential
@@ -916,7 +1054,20 @@ Being honest about where things stand:
   the real system clipboard has not been used, and whether GNOME on Wayland
   lets the host notice copies made in other programs is unknown until the
   clipboard test tool is run (see [BUILD.md](BUILD.md#clipboard-test-tool-clipboard-spike)).
-- The file manager and clipboard on Windows (never run there).
+- The file manager and clipboard on Windows (not tried there yet).
+- **Japanese, Chinese and Korean file names, the check boxes and the
+  selection keys on a screen.** The font search, the glyph coverage of the
+  Noto CJK fonts installed on the developer's PC, name handling for many
+  scripts, and the selection logic are unit-tested only. How the names look
+  in the real window, on either operating system, has not been seen.
+- **Automatic quality on real slow connections.** It was tested only on one
+  machine with a simulated slow link (the picture stayed about 0.1-0.2 s
+  old at 1.5 Mbit/s where it used to fall 4-6 s behind, and quality came
+  back when the link was fast again). How it behaves on a real slow uplink,
+  a relay, Wi-Fi or mobile data, and with the real screen content of a
+  desktop, has not been measured yet.
+- The "View only" line and the quality text in the real window (never seen
+  on a screen).
 
 Please report problems on the project's GitHub page. Never post your
 password, your `node.key` or `password.verifier` files, or anything else

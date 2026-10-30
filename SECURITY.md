@@ -27,8 +27,8 @@ program as it is today (an early release), not plans.
   user account can reach, directly, without going through the screen. See
   [Clipboard and files](#clipboard-and-files); each can be switched off.
 - Both computers must run the same protocol version. This version (protocol
-  3) does not connect to older builds (v0.1.0, or earlier test builds with
-  protocol 2), in either direction.
+  4) does not connect to older builds (v0.1.0, or earlier test builds with
+  protocols 2 and 3), in either direction.
 
 ## How a connection works
 
@@ -161,10 +161,12 @@ use your own relay.
 may ask your router to open a port automatically (UPnP / NAT-PMP), if your
 router allows that.
 
-**View-only viewers are not told.** If a second person connects while
-someone else is in control, they can watch but their input is silently
-ignored. The host's list shows them as "(view only)"; the viewer gets no
-message.
+**View-only viewers.** If a second person connects while someone else is
+in control, they can watch only. Their window says "View only: another
+viewer is in control (reconnect when it leaves)" and sends no input; the
+host's list shows them as "(view only)". The banner is a courtesy: the
+protection is on the host, which drops every input event of a view-only
+session before it reaches the keyboard or mouse, whatever the viewer sends.
 
 **What the viewer sees.** On Linux with X11, the whole screen area of the
 session is captured. On Windows, only the main monitor. The viewer sees
@@ -183,6 +185,16 @@ them. The first approval needs a person at the host; it is then remembered in
 the file `remotedesktop.token` (owner-only, 0600), so later controlling
 sessions start without asking. Treat that file like a key: deleting it
 revokes the remembered approval (the next controlling session asks again).
+The system dialog must be approved once at the host computer; a password
+cannot replace it. The host window has a button, **Allow screen sharing and
+remote control now**, that runs this approval deliberately while the owner is
+at the computer: it opens the same combined portal session once, stores the
+token and closes the session at once (no frames kept, nothing else written).
+It is disabled while a viewer is connected. After that, password connections
+need nobody at the host. That a valid saved approval really suppresses the
+dialog is established by reading the code (the token is passed to the portal on
+every start), not on real hardware; GNOME's behaviour after a reboot or an
+expired token is unverified, and the dialog may return.
 Watch-only viewers (anyone connecting while someone else controls) get a
 separate plain screen-sharing session (remembered in `screencast.token`, also
 0600) and never a keyboard/pointer grant. When the controlling session ends,
@@ -235,8 +247,11 @@ it is not a log you can rely on afterwards.
 
 **Untested parts.** These have not been tested in real conditions yet: two
 computers over the real internet, the post-quantum key exchange through the
-public relays, real mouse and keyboard control, and anything on Windows
-(including the Windows file-system protections described below). The file
+public relays, automatic picture quality on real slow links, and a Windows PC
+as the controlled host (including the Windows file-system protections
+described below). Tested on real hardware: a Windows PC connecting to and
+controlling a Linux PC (Ubuntu, GNOME on Wayland): picture, mouse and
+keyboard work. The file
 manager window has never been looked at on a real screen, no file has been
 copied between two real computers, and clipboard sync has only run against a
 simulated clipboard. Bugs in these areas are likely to be found.
@@ -318,7 +333,7 @@ It is **not** an access-control boundary:
 - a bind mount of home on the same file system is caught only by identity
   checks that were tested with simulated values (making one needs root);
 - the Windows parts (short names, junctions, file identity) have only been
-  unit-tested on Linux, never run on Windows.
+  unit-tested on Linux, not yet tried on a Windows host.
 
 **Copies cannot overwrite by accident.** Incoming data is written to a new
 `name.part` file that the copy itself created (`O_EXCL`; links and
@@ -327,7 +342,12 @@ program is left alone and `name.~N.part` is used instead). Only after the
 whole file's BLAKE3 hash matches is it renamed to its final name, with a
 "no replace" rename unless the user chose **Replace**. Names are cleaned the
 same way on both sides (no path separators, control or direction-override
-characters, reserved Windows names, …).
+characters, reserved Windows names, …). A name that is not valid text on its
+computer (it arrives with the replacement character U+FFFD) is refused in
+paths and new names, so it can never be looked up as a different file; the
+viewer lists such names greyed out and never selects them, and the host skips
+them inside a copied folder. Names shown in the viewer have direction and
+invisible characters written out as `\u{...}`.
 
 **Abuse limits.** File requests are rate-limited (50/s), at most 4 file
 operations and 4 copies run per session, at most 16 blocking file
@@ -335,6 +355,24 @@ operations host-wide, and each operation has a 10-second deadline. A copy
 slower than 4 KiB/s on average after its first minute is stopped. A
 controlling viewer can still fill the host's disk (it has write access as
 the user anyway); the error says the disk is full.
+
+**Picture flow control cannot be abused (protocol 4).** The viewer
+confirms the pictures it has shown with a tiny message on the control
+channel (`FrameAck`, a number, at most one per 50 ms), and the host tells
+the viewer the picture quality it uses (`VideoQuality`, three numbers,
+display only). The host checks every confirmation: one that is not newer
+than the last, names a picture that was never sent, or comes less than
+10 ms after the previous one is ignored (never an error, never a reason to
+wait). Confirmations only decide how much of **that viewer's own** picture
+is on the way: a viewer that lies or never confirms can only make its own
+picture slower, smaller or (when it stays silent for 10 seconds) fall back
+to the older behaviour without flow control. It cannot stall the host:
+capture never waits for a confirmation, the mouse and keyboard path does
+not use them, and the host keeps at most 64 records per session. All of
+this state is per session and is gone when it ends. Confirmations are only
+accepted inside a signed-in session; before sign-in any message other than
+the expected ones still ends the connection, so the limits before sign-in
+are unchanged.
 
 **Nothing new before sign-in.** The clipboard/file channel and every copy
 stream are opened **by the host**, and only after sign-in. The host still
